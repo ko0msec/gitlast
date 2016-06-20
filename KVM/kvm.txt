@@ -59,7 +59,7 @@
 	/etc/qemu-ifup
 #!/bin/bash
 #
-bridge=vribr0
+bridge=virbr0
 if [ -n "$1" ]; then
   ifconfig $1 up
   sleep 1
@@ -91,8 +91,14 @@ fi
 #chmod +x /etc/qemu-ifdown
 
 创建虚拟机并启用网卡
-qemu-kvm -name "winxp" -m 768 -smp 1 -drive file=/img/vm1/xp.qcow2,if=ide,index=0,media=disk,format=qcow2 -drive file=/root/YLMF_GHOST_XP_SP3_V2016_06.iso,media=cdrom,index=1 -boot order=dc -net nic -net tap,name=vnet0,script=/etc/qemu-ifup
+qemu-kvm -name "winxp" -m 768 -smp 1 -drive file=/img/vm1/xp.qcow2,if=ide,index=0,media=disk,format=qcow2 -drive file=/root/YLMF_GHOST_XP_SP3_V2016_06.iso,media=cdrom,index=1 -boot order=dc -net nic -net tap,ifname=vnet0,script=/etc/qemu-ifup --daemonize 
 
+	--daemonize 后台启动
+
+问题：虚拟机之间内网互通，访问外网不通
+解决：修改/etc/libvirt/qemu/networks/下面的一个文件
+	default.xml
+	把里面的地址段改成和宿主机一个地址段就可以访问外网
 
 
 
