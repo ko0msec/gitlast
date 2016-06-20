@@ -1,0 +1,5 @@
+keystone 问题
+出现404检查 HTTP是否启动  export环境变量是否设置正确
+
+glance问题
+The resource could not be found. (HTTP 404)
