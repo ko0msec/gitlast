@@ -1,0 +1,106 @@
+1、开启CPU虚拟化,Linux主机必须安装了图形界面 KDE GONE 
+2、查看Linux是否支持虚拟化
+	egrep - "svm|vmx" /proc/cpuinfo
+	加载kvm虚拟化
+	modprobe kvm
+
+3、安装qemu libvirt virt-manager网络管理工具,device-mapper-libs是一个库
+	yum groupinstall "Virtualization"	
+	yum groupinfo "Virtualization"
+	yum install qemu-kvm qemu-kvm-tools
+	yum install libvirt virt-manager device-mapper-libs	
+	
+	3.1 KVM网络管理
+	service libvirtd start 
+	关闭NetworkManager否则重启网卡会报错
+	service NetworkManager stop
+	chkconfig NetworkManager off
+	查看并桥接网卡 把eth0桥接到br0网卡上，eth0上的IP也会飞到br0上
+	brctl show 
+	virsh iface-bridge eth0 br0
+	
+	3.2
+	在KVM平台安装tigervnc tigervnc-server vnc-server用于链接虚拟机
+	yum install tigervnc tigervnc-server vnc-server
+	配置vnc
+	vncpassword  创建vnc密码
+	vncserver	启动vnc
+	使用windows客户端连接vnc
+	
+
+4、配置kvm脚本，kvm的qemu-kvm不在/usr/bin下，虚拟链接一下
+	rpm -ql qemu-kvm
+	ln -sv /usr/libexec/qemu-kvm /usr/bin/qemu-kvm 
+	
+
+5、qemu-kvm [option] 参数使用
+	
+6、qemu-kvm安装XP
+	创建磁盘文件
+	mkdir /img/vm1
+	qemu-img create -f qcow2 -o size=10G /img/vm1/xp.qcow2	
+	qemu-img 是用来创建img文件的 -f 指定文件格式 -o size指定大小
+	
+	创建虚拟机
+	qemu-kvm -name "Xp" -m 768 -smp 1 -hda /img/vm1/xp.qcow2 -cdrom YLMF-x86.iso -boot order=dc
+	VNC server running on `::1:5900'
+	qemu-kvm 用来创建虚拟机 -name 指定名称 -m 指定内存 -smp 指定CPU核数不能超过宿主机 -hda 指定使用什么硬盘 -cdrom 指定镜像
+	
+	使用vncviewer 来启动虚拟机
+	vncviewer :1  或者vncviewer :5900
+
+6、qemu-kvm 使用帮助
+	qemu-kvm --name ""
+
+
+	
+
+7、创建网卡脚本,加入网卡设备
+	/etc/qemu-ifup
+#!/bin/bash
+#
+bridge=vribr0
+if [ -n "$1" ]; then
+  ifconfig $1 up
+  sleep 1
+  brctl addif $bridge $1
+  exit 0
+else
+  echo "Error: no interfacespecified."
+  exit 1
+fi
+
+	/etc/qemu-ifdown
+
+# cat/etc/qemu-ifdown
+#!/bin/bash
+#
+bridge=vribr0
+if [ -n "$1" ];then
+  brctl delif $bridge $1
+  ifconfig $1 down
+  exit 0
+else
+  echo "Error: no interfacespecified."
+  exit 1
+fi
+
+给予脚本执行权限；
+
+#chmod +x /etc/qemu-ifup 
+#chmod +x /etc/qemu-ifdown
+
+创建虚拟机并启用网卡
+qemu-kvm -name "winxp" -m 768 -smp 1 -drive file=/img/vm1/xp.qcow2,if=ide,index=0,media=disk,format=qcow2 -drive file=/root/YLMF_GHOST_XP_SP3_V2016_06.iso,media=cdrom,index=1 -boot order=dc -net nic -net tap,name=vnet0,script=/etc/qemu-ifup
+
+
+
+
+
+
+
+
+
+
+
+
