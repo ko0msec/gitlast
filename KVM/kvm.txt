@@ -2,7 +2,7 @@
 2、查看Linux是否支持虚拟化
 	egrep - "svm|vmx" /proc/cpuinfo
 	加载kvm虚拟化
-	modprobe kvm
+	modprobe kvm | kvm_inter
 
 3、安装qemu libvirt virt-manager网络管理工具,device-mapper-libs是一个库
 	yum groupinstall "Virtualization"	
@@ -55,7 +55,7 @@
 
 	
 
-7、创建网卡脚本,加入网卡设备
+7、创建桥接网卡脚本,加入网卡设备
 	/etc/qemu-ifup
 #!/bin/bash
 #
@@ -87,10 +87,10 @@ fi
 
 给予脚本执行权限；
 
-#chmod +x /etc/qemu-ifup 
-#chmod +x /etc/qemu-ifdown
+	#chmod +x /etc/qemu-ifup 
+	#chmod +x /etc/qemu-ifdown
 
-创建虚拟机并启用网卡
+创建虚拟机并启用网卡-“以桥接模式”
 qemu-kvm -name "winxp" -m 768 -smp 1 -drive file=/img/vm1/xp.qcow2,if=ide,index=0,media=disk,format=qcow2 -drive file=/root/YLMF_GHOST_XP_SP3_V2016_06.iso,media=cdrom,index=1 -boot order=dc -net nic -net tap,ifname=vnet0,script=/etc/qemu-ifup --daemonize 
 
 	--daemonize 后台启动
@@ -101,12 +101,42 @@ qemu-kvm -name "winxp" -m 768 -smp 1 -drive file=/img/vm1/xp.qcow2,if=ide,index=
 	把里面的地址段改成和宿主机一个地址段就可以访问外网
 
 
+8、KVM网络模式
+	bridge模型
+	brctl iface-birdge eth0 virbr0 桥接网卡
+	
+	NAT模型：
+	brctl show  查看当前的网卡模式
+	brctl addbr virbr1  添加一网卡
+	ifconfig 192.168.1.1/24 virbr1 给新添加的网卡增加nat-IP地址
+	
+	8.2安装dnsmasq
+	yum install dnsmasq
+	vi /etc/dnsmasq.conf
+	8.2 添加网络转发
+	iptables -t nat -A POSTROUTING -s 192.168.1.0/24 -j SNAT --to-source 150.1.1.1
+	qemu-kvm --name "nat" -m 512 -smp 2 -drive file=/img/vm1/xp.qcow2,media=disk,if=ide,index=0,format=qcow2 -net nic,model=virtio -net tap,ifname=vnet0,downscript=no -boot order=dc
+	
+KVM 组件
+	qemu：qemu-kvm  qemu-img
+	libvirt：virt-viewer,virt-manager,
 
 
+9、KVM快照
+	qemu-img是用来实现磁盘映像管理的工具组件。
+		create : 创建一个新的磁盘
+		check：检查磁盘映像文件中的错误
+		info：显示指定磁盘映像的信息
+		snapshot：管理磁盘映像的快照
+				-a 应用一个快照
+				-c 创建一个快照
+				-d 删除一个快照
+				-l 显示当前快照
+		commit：提交磁盘映像的所有改变
+		rbase：给予某个磁盘映像文件创建新的映像文件
+		resize：增大磁盘映像文件的大小
 
-
-
-
+10、virtsh	
 
 
 
