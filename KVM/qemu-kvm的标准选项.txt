@@ -1,0 +1,62 @@
+qemu-kvm的标准选项主要涉及指定主机类型、CPU模式、NUMA、软驱设备、光驱设备及硬件设备等。
+
+-name name：设定虚拟机名称；
+-M machine：指定要模拟的主机类型，如Standard PC、ISA-only PC或Intel-Mac等，可以使用“qemu-kvm -M ?”获取所支持的所有类型；
+-m megs：设定虚拟机的RAM大小；
+-cpu model：设定CPU模型，如coreduo、qemu64等，可以使用“qemu-kvm -cpu ?”获取所支持的所有模型；
+-smp n[,cores=cores][,threads=threads][,sockets=sockets][,maxcpus=maxcpus]：设定模拟的SMP架构中CPU的个数等、每个CPU的核心数及CPU的socket数目等；PC机上最多可以模拟255颗CPU；maxcpus用于指定热插入的CPU个数上限；
+-numa opts：指定模拟多节点的numa设备；
+-fda file
+-fdb file：使用指定文件(file)作为软盘镜像，file为/dev/fd0表示使用物理软驱；
+-hda file
+-hdb file
+-hdc file
+-hdd file：使用指定file作为硬盘镜像；
+-cdrom file：使用指定file作为CD-ROM镜像，需要注意的是-cdrom和-hdc不能同时使用；将file指定为/dev/cdrom可以直接使用物理光驱；
+-drive option[,option[,option[,...]]]：定义一个硬盘设备；可用子选项有很多。
+  file=/path/to/somefile：硬件映像文件路径；
+  if=interface：指定硬盘设备所连接的接口类型，即控制器类型，如ide、scsi、sd、mtd、floppy、pflash及virtio等；
+  index=index：设定同一种控制器类型中不同设备的索引号，即标识号；
+  media=media：定义介质类型为硬盘(disk)还是光盘(cdrom)；
+  snapshot=snapshot：指定当前硬盘设备是否支持快照功能：on或off；
+  cache=cache：定义如何使用物理机缓存来访问块数据，其可用值有none、writeback、unsafe和writethrough四个；
+  format=format：指定映像文件的格式，具体格式可参见qemu-img命令；
+-boot [order=drives][,once=drives][,menu=on|off]：定义启动设备的引导次序，每种设备使用一个字符表示；不同的架构所支持的设备及其表示字符不尽相同，在x86 PC架构上，a、b表示软驱、c表示第一块硬盘，d表示第一个光驱设备，n-p表示网络适配器；默认为硬盘设备；
+-boot order=dc,once=d
+qemu-kvm的显示选项
+
+显示选项用于定义虚拟机启动后的显示接口相关类型及属性等。
+
+-nographic：默认情况下，qemu使用SDL来显示VGA输出；而此选项用于禁止图形接口，此时,qemu类似一个简单的命令行程序，其仿真串口设备将被重定向到控制台；
+-curses：禁止图形接口，并使用curses/ncurses作为交互接口；
+-alt-grab：使用Ctrl+Alt+Shift组合键释放鼠标；
+-ctrl-grab：使用右Ctrl键释放鼠标；
+-sdl：启用SDL；
+-spice option[,option[,...]]：启用spice远程桌面协议；其有许多子选项，具体请参照qemu-kvm的手册；
+-vga type：指定要仿真的VGA接口类型，常见类型有：
+  cirrus：Cirrus Logic GD5446显示卡；
+  std：带有Bochs VBI扩展的标准VGA显示卡；
+  vmware：VMWare SVGA-II兼容的显示适配器；
+  qxl：QXL半虚拟化显示卡；与VGA兼容；在Guest中安装qxl驱动后能以很好的方式工作，在使用spice协议时推荐使用此类型；
+  none：禁用VGA卡；
+-vnc display[,option[,option[,...]]]：默认情况下，qemu使用SDL显示VGA输出；使用-vnc选项，可以让qemu监听在VNC上，并将VGA输出重定向至VNC会话；使用此选项时，必须使用-k选项指定键盘布局类型；其有许多子选项，具体请参照qemu-kvm的手册；
+i386平台专用选项
+
+-no-acpi：禁用ACPI功能，GuestOS与ACPI出现兼容问题时使用此选项；
+-balloon none：禁用balloon设备；
+-balloon virtio[,addr=addr]：启用virtio balloon设备；
+网络属性相关选项
+
+网络属性相关选项用于定义网络设备接口类型及其相关的各属性等信息。这里只介绍nic、tap和user三种类型网络接口的属性，其它类型请参照qemu-kvm手册。
+
+-net nic[,vlan=n][,macaddr=mac][,model=type][,name=name][,addr=addr][,vectors=v]：创建一个新的网卡设备并连接至vlan n中；PC架构上默认的NIC为e1000，macaddr用于为其指定MAC地址，name用于指定一个在监控时显示的网上设备名称；emu可以模拟多个类型的网卡设备，如virtio、i82551、i82557b、i82559er、ne2k_isa、pcnet、rtl8139、e1000、smc91c111、lance及mcf_fec等；不过，不同平台架构上，其支持的类型可能只包含前述列表的一部分，可以使用“qemu-kvm -net nic,model=?”来获取当前平台支持的类型；
+-net tap[,vlan=n][,name=name][,fd=h][,ifname=name][,script=file][,downscript=dfile]：通过物理机的TAP网络接口连接至vlan n中，使用script=file指定的脚本(默认为/etc/qemu-ifup)来配置当前网络接口，并使用downscript=file指定的脚本(默认为/etc/qemu-ifdown)来撤消接口配置；使用script=no和downscript=no可分别用来禁止执行脚本；
+-net user[,option][,option][,...]：在用户模式配置网络栈，其不依赖于管理权限；有效选项有：
+  vlan=n：连接至vlan n，默认n=0；
+  name=name：指定接口的显示名称，常用于监控模式中；
+  net=addr[/mask]：设定GuestOS可见的IP网络，掩码可选，默认为10.0.2.0/8；
+  host=addr：指定GuestOS中看到的物理机的IP地址，默认为指定网络中的第二个，即x.x.x.2；
+  dhcpstart=addr：指定DHCP服务地址池中16个地址的起始IP，默认为第16个至第31个，即x.x.x.16-x.x.x.31；
+  dns=addr：指定GuestOS可见的dns服务器地址；默认为GuestOS网络中的第三个地址，即x.x.x.3；
+  tftp=dir：激活内置的tftp服务器，并使用指定的dir作为tftp服务器的默认根目录；
+  bootfile=file：BOOTP文件名称，用于实现网络引导GuestOS；如：qemu -hda linux.img -boot n -net user,tftp=/tftpserver/pub,bootfile=/pxelinux.0
