@@ -1,0 +1,222 @@
+﻿H3C交换机 
+################################################  
+1、system-view   进入系统视图模式  
+2、sysname   为设备命名  
+3、display current-configuration 当前配置情况  
+4、 language-mode Chinese|English 中英文切换  
+5、interface Ethernet 1/0/1 进入以太网端口视图  
+6、 port link-type Access|Trunk|Hybrid      设置端口访问模式  
+7、 port access vlan 10   在端口模式下将当前端口加入到vlan 10中  
+	port default vlan 10
+
+
+8、 undo shutdown   打开以太网端口  
+9、 shutdown   关闭以太网端口  
+10、 quit     退出当前视图模式
+  
+
+11、 vlan 10    创建VLAN 10并进入VLAN 10的视图模式  
+	interface vlanif 10  进入vlan10
+	undo ip address	#取消原有的IP地址
+	ip address 192.168.1.1 255.255.255.0
+
+12、port E1/0/2 to E1/0/5    在VLAN模式下将指定端口加入到当前vlan中  
+13、port trunk permit vlan all    允许所有的vlan通过 
+14、display this 显示当前状态
+	display vlanif  显示vlan信息
+	display interface vlan|brief 
+
+
+H3C配置流量  三层  E050
+全局模式下配置acl
+
+[SwitchA]aclnumber 2000
+
+[SwitchA-acl-link-2000]rulepermit ingress any egress any
+
+traffic-limit inbound ip-group 2000 rule 0 102400
+line-rate outbound 102400
+(line-rate)端口的速率限制
+
+1. 进入端口E0/1的配置视图
+[SwitchA]interface Ethernet 0/1
+2. 对端口E0/1的出方向报文进行流量限速，限制到3Mbps
+[SwitchA- Ethernet0/1]line-rate outbound 30
+3. 对端口E0/1的入方向报文进行流量限速，限制到1Mbps
+[SwitchA- Ethernet0/1]line-rate inbound 16 
+
+说明：报文速率限制级别取值为1～127。如果速率限制级别取值在1～28范围内，则速率限制的粒度为64Kbps，这种情况下，当设置的级别为N，则端口上限制的速率大小为N*64K；如果速率限制级别取值在29～127范围内，则速率限制的粒度为1Mbps，这种情况下，当设置的级别为N，则端口上限制的速率大小为(N-27)*1Mbps
+
+
+
+
+QOS配置	二层  S5500
+
+ qos lr outbound cir 204800 cbs 25600000
+ qos lr inbound cir 204800 cbs 25600000
+
+
+[H3C]local-user cenvan 
+[H3C-luser-cenvan]password cipher Ffk3mT96tb
+[H3C-luser-cenvan]authorization-attribute level 3	
+[H3C-luser-cenvan]service-type telnet terminal ssh 	
+[H3C]user-interface aux 0
+[H3C-ui-aux0]authentication-mode scheme 	
+[H3C-ui-aux0]user privilege level 3
+[H3C]user-interface vty 0 4	
+[H3C-ui-vty0-4]authentication-mode scheme 	
+[H3C-ui-vty0-4]user privilege level 3	
+[H3C]user-interface vty 5 15
+[H3C-ui-vty5-15]authentication-mode scheme 	
+[H3C-ui-vty5-15]user privilege level 3
+[H3C]int GigabitEthernet 1/0/25
+[H3C-GigabitEthernet1/0/25]port link-type trunk 	
+[H3C-GigabitEthernet1/0/25]port trunk permit vlan all
+[H3C]int GigabitEthernet 1/0/26
+[H3C-GigabitEthernet1/0/26]shutdown 
+[H3C]port-group manual 1
+[H3C-port-group-manual-1]group-member Ethernet 1/0/1 to Ethernet 1/0/24	
+[H3C-port-group-manual-1]shutdown
+[H3C]vlan 10	
+[H3C-vlan10]quit 	
+[H3C]interface Vlan-interface 10
+[H3C-Vlan-interface10]ip address 10.255.0.28 255.255.255.0	
+[H3C-Vlan-interface10]undo shutdown 
+[H3C-Vlan-interface10]quit 
+[H3C]ip route-static 0.0.0.0 0.0.0.0 10.255.0.254
+snmp-agent community read cipher Snmp-Cenvan-Ro
+snmp-agent sys-info version all
+
+
+[H3C]dis current-configuration 
+#
+ version 5.20, Release 5103P01
+#
+ sysname H3C
+#
+ domain default enable system
+#
+ telnet server enable
+#
+vlan 1
+#
+vlan 10
+#
+domain system
+ access-limit disable
+ state active
+ idle-cut disable
+ self-service-url disable
+#
+user-group system
+#
+local-user cenvan
+ password cipher 9C_4E+8*A9]:CS',`WK8#Q!!
+ authorization-attribute level 3
+ service-type ssh telnet terminal
+#
+interface NULL0
+#
+interface Vlan-interface10
+ ip address 10.255.0.28 255.255.255.0
+#
+interface Ethernet1/0/1
+ shutdown
+#
+interface Ethernet1/0/2
+ shutdown
+#
+interface Ethernet1/0/3
+ shutdown
+#
+interface Ethernet1/0/4
+ shutdown
+#
+interface Ethernet1/0/5
+ shutdown
+#
+interface Ethernet1/0/6
+ shutdown
+#
+interface Ethernet1/0/7
+ shutdown
+#
+interface Ethernet1/0/8
+ shutdown
+#
+interface Ethernet1/0/9
+ shutdown
+#
+interface Ethernet1/0/10
+ shutdown
+#
+interface Ethernet1/0/11
+ shutdown
+#
+interface Ethernet1/0/12
+ shutdown
+#
+interface Ethernet1/0/13
+ shutdown
+#               
+interface Ethernet1/0/14
+ shutdown
+#
+interface Ethernet1/0/15
+ shutdown
+#
+interface Ethernet1/0/16
+ shutdown
+#
+interface Ethernet1/0/17
+ shutdown
+#
+interface Ethernet1/0/18
+ shutdown
+#
+interface Ethernet1/0/19
+ shutdown
+#
+interface Ethernet1/0/20
+ shutdown
+#
+interface Ethernet1/0/21
+ shutdown       
+#
+interface Ethernet1/0/22
+ shutdown
+#
+interface Ethernet1/0/23
+ shutdown
+#
+interface Ethernet1/0/24
+ shutdown
+#
+interface GigabitEthernet1/0/25
+ port link-type trunk
+ port trunk permit vlan all
+#
+interface GigabitEthernet1/0/26
+ shutdown
+#
+ ip route-static 0.0.0.0 0.0.0.0 10.255.0.254
+#
+ load xml-configuration
+#
+user-interface aux 0
+ authentication-mode scheme
+user-interface vty 0 15
+ authentication-mode scheme
+ user privilege level 3
+#
+return
+
+
+
+
+
+
+
+
+
+ 
